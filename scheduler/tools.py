@@ -5,8 +5,10 @@ from .slots import (
     availability_from_busy,
     combine_availability,
     find_free_windows,
+    minutes_to_time,
     score_window,
     slot_to_time,
+    time_to_minutes,
     time_to_slot,
     time_to_slot_ceil,
 )
@@ -68,9 +70,11 @@ def find_free_slots(
     starts = find_free_windows(free, slots_needed, start_slot, end_slot)
     res = []
     for s in starts:
+        start_min = time_to_minutes(slot_to_time(s))
+        end_min = start_min + duration_minutes
         item = {
             "start": slot_to_time(s),
-            "end": slot_to_time(s + slots_needed),
+            "end": minutes_to_time(end_min),
         }
         if with_scores:
             item["score"] = score_window(free, s, slots_needed)

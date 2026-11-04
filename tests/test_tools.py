@@ -77,12 +77,11 @@ def test_find_slots_multi_day():
 
 def test_find_free_slots_duration_rounding():
     store = Store.load()
-    # 45 minutes needs 2 slots (60 mins)
+    # 45 minutes needs 2 slots (60 mins reserved on grid) but ends after 45 minutes
     slots_45 = find_free_slots(
         store, attendees=["priya", "sam"], date="2026-11-03", duration_minutes=45
     )
     for s in slots_45:
-        # Every slot should have a 1-hour duration (2 slots of 30 min)
         start_h, start_m = map(int, s["start"].split(":"))
         end_h, end_m = map(int, s["end"].split(":"))
-        assert (end_h * 60 + end_m) - (start_h * 60 + start_m) == 60
+        assert (end_h * 60 + end_m) - (start_h * 60 + start_m) == 45

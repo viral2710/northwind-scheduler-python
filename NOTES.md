@@ -8,10 +8,10 @@
 - **What I changed**: Updated the upper bound to `range(start_slot, end_slot - slots_needed + 1)`. Added boundary unit tests in `tests/test_slots.py`.
 - **Existing test modified**: Updating this boundary exposed a latent bug in `tests/test_tools.py::test_find_free_slots_for_two_people_in_the_afternoon`. On Tuesday afternoon, both Priya and Sam are free from 16:30 to 17:00, but the original test asserted only 4 slots ending at 16:30 because the original implementation missed the final slot of the day. The test expectation was updated to include `{"start": "16:30", "end": "17:00"}`.
 
-### 2. Duration Truncation / False Availability (`scheduler/tools.py`)
-- **What it was**: `slots_needed` was calculated as `duration_minutes // 30` (integer floor division). If a user requested a 45-minute meeting, `45 // 30` evaluated to `1` slot (30 minutes). The assistant would search for a 30-minute opening and propose it, leaving the remaining 15 minutes vulnerable to overlapping meetings.
+### 2. Duration Truncation & Precise End Time Calculation (`scheduler/tools.py`)
+- **What it was**: `slots_needed` was calculated as `duration_minutes // 30` (integer floor division), which caused a 45-minute request to round down to 30 minutes, underallocating time. Additionally, previously returned window end times were strictly snapped to slot boundaries rather than reflecting the precise requested meeting duration.
 - **How I found it**: Reviewing requirement 1: *"Every time the assistant offers must actually work for every attendee, and it must not miss times that do work."*
-- **What I changed**: Used ceiling division `-(-duration_minutes // 30)` to ensure that any fractional slot duration is fully allocated so attendees have sufficient free time.
+- **What I changed**: Used ceiling division `-(-duration_minutes // 30)` to ensure sufficient contiguous free blocks on the 30-minute calendar grid while calculating the exact meeting end time (`start_time + duration_minutes`). For instance, a 45-minute meeting starting at 13:00 now blocks 13:00 to 13:45 (requiring two 30-min free slots on the grid), accurately preserving the attendee's remaining 15 minutes of buffer.
 
 ### 3. Ghost / Invented Attendees Treated as 100% Free (`scheduler/tools.py`)
 - **What it was**: `find_free_slots` and `get_busy_times` performed `store.calendars.get(person, {}).get(date, [])`. When an unknown person (e.g., someone not in `people.json`) was supplied, `store.calendars.get(...)` returned `[]` (no busy blocks), marking that imaginary person as completely free for the entire day.
@@ -63,3 +63,4 @@
 2. **Calendar Conflict Resolution & Optional Attendees**: Distinguish between mandatory attendees and optional attendees when no slot satisfies the entire group.
 3. **Natural Language Date Parsing**: Enhance prompt / tool support for relative natural phrases like "next Tuesday", "in two days", or "end of week" directly mapped to ISO date ranges.
 4. **Deliberately Left Alone**: Writing invitations, sending calendar invites, and external database persistence were kept strictly out of scope per assignment instructions.
+
