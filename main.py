@@ -14,16 +14,34 @@ from scheduler.model import FakeModel, final, tool_call
 from scheduler.store import Store
 
 
-def demo_model() -> FakeModel:
+def demo_model(request: str = "") -> FakeModel:
+    req_lower = request.lower()
+    # If the user asks for someone not in the directory (e.g. "viral")
+    if "viral" in req_lower or "batman" in req_lower:
+        return FakeModel([
+            tool_call(
+                "find_free_slots",
+                attendees=["priya", "viral"],
+                date="2026-11-03",
+                duration_minutes=45,
+                earliest="12:00",
+            ),
+            final("I could not find 'Viral' in the Northwind employee directory. Please check the spelling or provide their Northwind email/ID."),
+        ])
+
+    # Dynamic duration check for 45 min vs 60 min
+    duration = 45 if "45" in req_lower else 60
+    end_time = "13:45" if duration == 45 else "14:00"
+
     return FakeModel([
         tool_call(
             "find_free_slots",
             attendees=["priya", "sam"],
             date="2026-11-03",
-            duration_minutes=60,
+            duration_minutes=duration,
             earliest="12:00",
         ),
-        final("Priya and Sam are both free on Tuesday Nov 3 from 13:00 to 14:00."),
+        final(f"Priya and Sam are both free on Tuesday Nov 3 from 13:00 to {end_time}."),
     ])
 
 
@@ -33,7 +51,7 @@ def main() -> None:
         from scheduler.real_model import OpenAICompatibleModel
         model = OpenAICompatibleModel()
     else:
-        model = demo_model()
+        model = demo_model(request)
     agent = SchedulingAgent(model, Store.load())
     print(agent.run(request))
 
