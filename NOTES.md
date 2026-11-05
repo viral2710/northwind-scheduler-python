@@ -30,6 +30,11 @@
   - Added cycle detection to intercept repeated identical tool calls.
   - Captured tool exceptions and JSON decoding errors, returning actionable feedback into the agent conversation so the model can self-correct or report failures cleanly.
 
+### 5. Continuous Free Time Reporting vs. Redundant Sliding Windows (`scheduler/tools.py`)
+- **What it was**: When attendees are free for a wide continuous span (such as 12:00 to 17:00), the naive slot sliding window generated dozens of overlapping micro-slots (e.g. 12:00-12:45, 12:30-13:15, 13:00-13:45, 13:30-14:15, etc.), producing overwhelming, redundant clutter.
+- **How I found it**: User query testing for open afternoons ("Find 45 min for Priya and Mei on Wednesday afternoon").
+- **What I changed**: Added `get_continuous_free_times(...)` and `find_continuous_free_blocks(...)` in `scheduler/slots.py` and `scheduler/tools.py`. The assistant now calculates and surfaces the full continuous available interval (`12:00 to 17:00 (5 hours free)`), providing a natural, concise, and helpful response.
+
 ---
 
 ## Part B: Meaningful Addition
