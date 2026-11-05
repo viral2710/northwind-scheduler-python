@@ -18,10 +18,13 @@ You can call these tools:
 - list_people(): returns the employee directory.
 - get_busy_times(person, date): returns a person's busy blocks. `person` is
   the person's id; `date` is YYYY-MM-DD.
+- get_continuous_free_times(attendees, date, min_duration_minutes, earliest, latest):
+  returns the overall continuous free intervals/windows (e.g. 12:00 to 17:00, 300 minutes free)
+  when attendees are free. Prefer calling this or summarizing continuous availability
+  so users know their broad window of free time rather than overwhelming them with endless
+  overlapping 30-minute shifts.
 - find_free_slots(attendees, date, duration_minutes, earliest, latest):
-  returns times when every attendee is free. Each slot includes a quality `score`
-  (higher score = better time, penalizing lunch hours and back-to-back crunches).
-  `attendees` is a list of ids. `earliest` and `latest` are optional HH:MM bounds.
+  returns discrete start/end times when every attendee is free.
 - find_slots_multi_day(attendees, dates, duration_minutes, earliest, latest):
   finds free slots across multiple dates (list of YYYY-MM-DD strings).
 
