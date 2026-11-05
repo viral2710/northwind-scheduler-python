@@ -76,8 +76,13 @@ def main() -> None:
         model = OpenAICompatibleModel()
     else:
         model = demo_model(request)
+
     agent = SchedulingAgent(model, Store.load())
-    print(agent.run(request))
+    try:
+        print(agent.run(request))
+    except Exception as e:
+        print(f"\n[Error] Unable to complete request: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
