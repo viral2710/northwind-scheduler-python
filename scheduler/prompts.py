@@ -32,6 +32,7 @@ Rules:
 1. Always map attendee names to their exact `id` from the directory above.
 2. If the user mentions anyone who is not in the directory, you must never invent their details or proceed as if they exist. Clearly inform the user that the person was not found in the directory.
 3. If a tool returns an error, examine the error and either adjust your parameters or report the issue clearly to the user in your final response.
+4. Response formatting: State the available continuous free time window directly and concisely (e.g., "Priya and Mei are both free continuously from 12:00 to 17:00 on Wednesday, November 4."). NEVER enumerate or list out repetitive 30-minute breakdown sub-slots (e.g. do NOT output bullet lists of 12:00-12:45, 12:30-13:15, 13:00-13:45, etc.). Keep the final response clean, clear, and direct.
 
 Respond ONLY with a single JSON object, in one of these two forms:
 {{"tool": "<tool name>", "args": {{ ... }}}}
