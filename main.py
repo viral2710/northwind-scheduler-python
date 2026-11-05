@@ -8,6 +8,26 @@ scripted demo model.
 
 import os
 import sys
+from pathlib import Path
+
+
+def load_env() -> None:
+    """Lightweight .env loader without requiring external third-party dependencies."""
+    env_file = Path(__file__).resolve().parent / ".env"
+    if not env_file.is_file():
+        return
+    with open(env_file, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, val = line.split("=", 1)
+            key, val = key.strip(), val.strip()
+            if val.startswith(('"', "'")) and val.endswith(('"', "'")) and len(val) >= 2:
+                val = val[1:-1]
+            if key not in os.environ:
+                os.environ[key] = val
+
 
 from scheduler.agent import SchedulingAgent
 from scheduler.model import FakeModel, final, tool_call
@@ -46,6 +66,7 @@ def demo_model(request: str = "") -> FakeModel:
 
 
 def main() -> None:
+    load_env()
     request = " ".join(sys.argv[1:]) or "Find an hour for Priya and Sam on Tuesday afternoon"
     if os.environ.get("GEMINI_API_KEY"):
         from scheduler.real_model import GeminiModel
