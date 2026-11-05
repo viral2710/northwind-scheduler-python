@@ -47,13 +47,3 @@ def test_find_free_windows_with_end_slot_boundary():
     # Only slots 0, 1, 2 free, end_slot = 2, slots_needed = 2 -> window [0, 1] ends at slot 2
     free = [True] * 4 + [False] * 12
     assert find_free_windows(free, slots_needed=2, start_slot=0, end_slot=2) == [0]
-
-
-def test_find_continuous_free_blocks():
-    from scheduler.slots import find_continuous_free_blocks
-    # Slot 0 busy, slots 1..3 free, slot 4 busy, slots 5..7 free
-    free = [False, True, True, True, False, True, True, True] + [False] * 8
-    blocks = find_continuous_free_blocks(free)
-    assert len(blocks) == 2
-    assert blocks[0] == {"start": "09:30", "end": "11:00", "duration_minutes": 90}
-    assert blocks[1] == {"start": "11:30", "end": "13:00", "duration_minutes": 90}

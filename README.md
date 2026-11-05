@@ -56,19 +56,14 @@ malformed or unexpected model output as well as well-formed JSON. The helpers
 `tool_call(...)` and `final(...)` build well-formed responses.
 
 You do not need a real model for this assignment, and using one earns no extra
-credit. If you want to try one anyway:
+credit. If you want to try one anyway, `real_model.py` works with any
+OpenAI-compatible endpoint, including a local server such as Ollama:
 
-### 1. Using Google Gemini
-Copy `.env.example` to `.env` and fill in your API key:
-```bash
-cp .env.example .env
-# edit .env and set GEMINI_API_KEY
-python main.py "Find 45 minutes with Priya and Sam on Tuesday afternoon"
-```
-
-### 2. Using Local Ollama or OpenAI
 ```bash
 export LLM_BASE_URL=http://localhost:11434/v1
 export LLM_MODEL=llama3.1
 python main.py "Find 30 minutes with Mei and Luis on Tuesday"
 ```
+
+You can also copy `.env.example` to `.env` to configure your environment variables.
+The adapter includes automatic exponential retry backoff and clean error diagnostics if the endpoint is offline or rate-limited.

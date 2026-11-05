@@ -4,7 +4,6 @@ and returns JSON-serialisable data."""
 from .slots import (
     availability_from_busy,
     combine_availability,
-    find_continuous_free_blocks,
     find_free_windows,
     minutes_to_time,
     score_window,
@@ -83,43 +82,6 @@ def find_free_slots(
     return res
 
 
-def get_continuous_free_times(
-    store: Store,
-    attendees: list[str],
-    date: str,
-    min_duration_minutes: int = 0,
-    earliest: str | None = None,
-    latest: str | None = None,
-) -> list[dict] | dict:
-    """Find contiguous intervals of free time when all attendees are free simultaneously.
-
-    Returns continuous spans (e.g. 12:00 to 17:00, 300 minutes total) rather than
-    sliding meeting slots.
-    """
-    known_ids = {p["id"] for p in store.people}
-    missing = [p for p in attendees if p not in known_ids]
-    if missing:
-        missing_str = ", ".join(f"'{p}'" for p in missing)
-        return {"error": f"Attendee(s) not found in employee directory: {missing_str}."}
-
-    calendars = []
-    for person in attendees:
-        busy = store.calendars.get(person, {}).get(date, [])
-        calendars.append(availability_from_busy(busy))
-
-    free = combine_availability(calendars)
-    try:
-        start_slot = max(0, time_to_slot(earliest)) if earliest else 0
-        end_slot = min(16, time_to_slot_ceil(latest)) if latest else None
-    except Exception as e:
-        return {"error": f"Invalid earliest/latest time format: {e}"}
-
-    blocks = find_continuous_free_blocks(free, start_slot, end_slot)
-    if min_duration_minutes > 0:
-        blocks = [b for b in blocks if b["duration_minutes"] >= min_duration_minutes]
-    return blocks
-
-
 def find_slots_multi_day(
     store: Store,
     attendees: list[str],
@@ -142,6 +104,5 @@ TOOLS = {
     "list_people": list_people,
     "get_busy_times": get_busy_times,
     "find_free_slots": find_free_slots,
-    "get_continuous_free_times": get_continuous_free_times,
     "find_slots_multi_day": find_slots_multi_day,
 }

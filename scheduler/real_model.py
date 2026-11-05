@@ -1,11 +1,13 @@
-"""Optional adapter for LLMs (OpenAI-compatible endpoints or Google Gemini).
+"""Optional adapter for any OpenAI-compatible chat completions endpoint.
 
-Works with:
-- Google Gemini API (GEMINI_API_KEY, GEMINI_MODEL)
-- OpenAI-compatible endpoints (LLM_BASE_URL, LLM_MODEL, optional LLM_API_KEY)
-- Local Ollama servers (http://localhost:11434/v1)
+Works with OpenAI, Azure OpenAI (v1-compatible endpoints), Ollama
+(http://localhost:11434/v1) and similar. Configure with environment variables:
 
-You do NOT need this to complete the assignment. All evaluation tests use FakeModel.
+    LLM_BASE_URL   e.g. http://localhost:11434/v1
+    LLM_API_KEY    optional for local servers
+    LLM_MODEL      e.g. llama3.1
+
+You do NOT need this to complete the assignment. All grading uses FakeModel.
 """
 
 import json
@@ -51,13 +53,13 @@ def send_http_request_with_retry(
                 raise ModelServiceUnavailableError(
                     f"{provider_name} model service appears to be down or rate-limited (HTTP {status_code}).\n"
                     f"Details from provider: {body_text}\n"
-                    f"Please check your API quota or retry in a few moments."
+                    f"Please check your endpoint status or retry in a few moments."
                 ) from e
 
             # Other 4xx client errors (e.g. 401 Unauthorized, 404 Model Not Found)
             raise ModelServiceUnavailableError(
                 f"{provider_name} returned client error (HTTP {status_code}):\n{body_text}\n"
-                f"Please verify your API key and model name."
+                f"Please verify your endpoint configuration and model name."
             ) from e
 
         except (urllib.error.URLError, TimeoutError, ConnectionError) as net_err:
@@ -69,43 +71,10 @@ def send_http_request_with_retry(
                 continue
             raise ModelServiceUnavailableError(
                 f"Could not connect to {provider_name} service: {net_err}.\n"
-                f"Please ensure you are connected to the network or the server is running."
+                f"Please ensure you are connected to the network or the local server is running."
             ) from net_err
 
     raise ModelServiceUnavailableError(f"Failed to reach {provider_name} after {max_retries} attempts: {last_error}")
-
-
-class GeminiModel:
-    """Adapter for Google Gemini's OpenAI-compatible v1beta endpoint or direct REST."""
-
-    def __init__(self):
-        self.api_key = os.environ.get("GEMINI_API_KEY", "")
-        self.model = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
-
-    def complete(self, messages: list[dict]) -> str:
-        converted = [
-            {"role": "user", "content": f"Tool result: {m['content']}"}
-            if m["role"] == "tool"
-            else m
-            for m in messages
-        ]
-        url = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-        body = json.dumps({
-            "model": self.model,
-            "messages": converted,
-            "temperature": 0.1,
-        }).encode()
-
-        request = urllib.request.Request(
-            url,
-            data=body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}",
-            },
-        )
-        payload = send_http_request_with_retry(request, provider_name="Google Gemini")
-        return payload["choices"][0]["message"]["content"]
 
 
 class OpenAICompatibleModel:
@@ -115,6 +84,8 @@ class OpenAICompatibleModel:
         self.model = os.environ["LLM_MODEL"]
 
     def complete(self, messages: list[dict]) -> str:
+        # Most endpoints don't accept a bare "tool" role without tool_call ids,
+        # so tool results are sent back as user messages.
         converted = [
             {"role": "user", "content": f"Tool result: {m['content']}"}
             if m["role"] == "tool"

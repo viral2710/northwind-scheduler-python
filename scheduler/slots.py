@@ -84,43 +84,6 @@ def find_free_windows(
     return results
 
 
-def find_continuous_free_blocks(
-    free: list[bool],
-    start_slot: int = 0,
-    end_slot: int | None = None,
-) -> list[dict]:
-    """Find contiguous spans of free time (e.g. 12:00 to 17:00)."""
-    if end_slot is None:
-        end_slot = SLOTS_PER_DAY
-
-    blocks = []
-    in_block = False
-    block_start = 0
-
-    for i in range(start_slot, end_slot):
-        if free[i]:
-            if not in_block:
-                in_block = True
-                block_start = i
-        else:
-            if in_block:
-                blocks.append({
-                    "start": slot_to_time(block_start),
-                    "end": slot_to_time(i),
-                    "duration_minutes": (i - block_start) * SLOT_MINUTES,
-                })
-                in_block = False
-
-    if in_block:
-        blocks.append({
-            "start": slot_to_time(block_start),
-            "end": slot_to_time(end_slot),
-            "duration_minutes": (end_slot - block_start) * SLOT_MINUTES,
-        })
-
-    return blocks
-
-
 def score_window(free: list[bool], start_slot: int, slots_needed: int) -> float:
     """Score a potential meeting window based on common workplace scheduling preferences.
 

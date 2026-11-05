@@ -3,7 +3,6 @@ from scheduler.tools import (
     find_free_slots,
     find_slots_multi_day,
     get_busy_times,
-    get_continuous_free_times,
 )
 
 
@@ -69,16 +68,15 @@ def test_find_free_slots_with_scores():
         assert afternoon_slot["score"] > lunch_slot["score"]
 
 
-def test_get_continuous_free_times():
+def test_find_slots_multi_day():
     store = Store.load()
-    # On Wednesday Nov 4, Priya is free from 12:00 to 17:00 and Mei is free all afternoon
-    blocks = get_continuous_free_times(
-        store, attendees=["priya", "mei"], date="2026-11-04", earliest="12:00"
+    multi_res = find_slots_multi_day(
+        store, attendees=["priya", "sam"], dates=["2026-11-02", "2026-11-03"], duration_minutes=60
     )
-    assert len(blocks) == 1
-    assert blocks[0]["start"] == "12:00"
-    assert blocks[0]["end"] == "17:00"
-    assert blocks[0]["duration_minutes"] == 300
+    assert "2026-11-02" in multi_res
+    assert "2026-11-03" in multi_res
+    assert isinstance(multi_res["2026-11-02"], list)
+    assert isinstance(multi_res["2026-11-03"], list)
 
 
 def test_find_free_slots_duration_rounding():

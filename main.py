@@ -68,10 +68,7 @@ def demo_model(request: str = "") -> FakeModel:
 def main() -> None:
     load_env()
     request = " ".join(sys.argv[1:]) or "Find an hour for Priya and Sam on Tuesday afternoon"
-    if os.environ.get("GEMINI_API_KEY"):
-        from scheduler.real_model import GeminiModel
-        model = GeminiModel()
-    elif os.environ.get("LLM_BASE_URL") and os.environ.get("LLM_MODEL"):
+    if os.environ.get("LLM_BASE_URL") and os.environ.get("LLM_MODEL"):
         from scheduler.real_model import OpenAICompatibleModel
         model = OpenAICompatibleModel()
     else:
